@@ -1,17 +1,35 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(process.cwd(), 'db.json');
 
 export async function GET() {
-  if (!fs.existsSync(DB_PATH)) {
-    return NextResponse.json({ data: [] });
-  }
+  // Protože na Vercelu nemáme databázi, vrátíme ukázková data,
+  // aby uživatel viděl, jak Dashboard vypadá.
   
-  const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
-  const data = JSON.parse(fileContent);
+  const demoData = [
+    {
+      id: "demo-1",
+      date: new Date().toISOString(),
+      user: { name: "Ukázkový Uživatel", email: "demo@email.cz" },
+      message: "Toto je ukázková poptávka, protože na Vercelu (Free) nelze ukládat do souborů.",
+      lawyers: [
+        {
+          name: "JUDr. Jan Novák",
+          offer: {
+            price: 2500,
+            availability: "Ihned",
+            message: "Mám zájem o zastupování."
+          }
+        },
+        {
+          name: "AK Svoboda",
+          offer: {
+            price: 1800,
+            availability: "Do týdne",
+            message: "Specializujeme se na tento obor."
+          }
+        }
+      ]
+    }
+  ];
   
-  // Seřadíme od nejnovější
-  return NextResponse.json({ data: data.reverse() });
+  return NextResponse.json({ data: demoData });
 }
