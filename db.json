@@ -1,0 +1,33 @@
+[
+  {
+    "id": "1765059163465",
+    "date": "2025-12-06T22:12:43.465Z",
+    "user": {
+      "name": "Jan Novák ",
+      "email": "xxxx@xxx.cz"
+    },
+    "message": "sljůldKAFCIXOPYŮCMůkelkjfdůA",
+    "lawyers": [
+      {
+        "name": "JUDr. Z ČAKu (Test)",
+        "address": "Nalezeno na webu: ČAK - Vyhledávání advokátů a koncipientů",
+        "specialization": "Spojení navázáno OK",
+        "offer": {
+          "price": 2553,
+          "availability": "Do týdne",
+          "message": "Dobrý den, specializuji se na tento typ případů. Rád vám pomohu."
+        }
+      },
+      {
+        "name": "JUDr. Jan Novák",
+        "address": "Dlouhá 12, Praha ",
+        "specialization": "Občanské právo",
+        "offer": {
+          "price": 1691,
+          "availability": "Do týdne",
+          "message": "Dobrý den, specializuji se na tento typ případů. Rád vám pomohu."
+        }
+      }
+    ]
+  }
+]
