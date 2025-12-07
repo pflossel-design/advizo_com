@@ -11,29 +11,46 @@ export default function InquiryPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Načtení vybraných právníků z paměti při startu
+  // 1. Načtení vybraných právníků z paměti při startu
   useEffect(() => {
     const data = localStorage.getItem("selectedLawyers");
-    if (data) setLawyers(JSON.parse(data));
+    if (data) {
+      const parsed = JSON.parse(data);
+      console.log("Načteni právníci z paměti:", parsed); // Kontrolní výpis
+      setLawyers(parsed);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Získání dat z formuláře
+    // Získání dat z formuláře (Jméno, Email...)
     const formData = new FormData(e.target as HTMLFormElement);
-    const data = Object.fromEntries(formData.entries());
+    const formProps = Object.fromEntries(formData.entries());
+
+    // 2. DŮLEŽITÉ: Spojíme data z formuláře + seznam právníků
+    const payload = {
+      ...formProps,
+      lawyers: lawyers // Tady musíme poslat to pole právníků!
+    };
+
+    console.log("Odesílám data na server:", payload);
 
     try {
-      // Odeslání na server
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, lawyers }),
+        body: JSON.stringify(payload),
       });
       
-      if (response.ok) setSent(true);
+      if (response.ok) {
+        setSent(true);
+        // Vyčistíme výběr, aby to nepletlo příště
+        localStorage.removeItem("selectedLawyers");
+      } else {
+        alert("Server odmítl data.");
+      }
     } catch (err) {
       alert("Chyba při odesílání");
     } finally {
@@ -43,13 +60,13 @@ export default function InquiryPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center">
           <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Poptávka odeslána!</h2>
-          <p className="text-slate-600 mb-6">Vaše poptávka byla uložena a odeslána právníkům.</p>
+          <p className="text-slate-600 mb-6">Vaše poptávka pro {lawyers.length} advokátů byla uložena.</p>
           
           <div className="space-y-3">
              <Link href="/dashboard" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors">
@@ -75,20 +92,24 @@ export default function InquiryPage() {
         <p className="text-slate-600 mb-8">Poptáváte právní služby u {lawyers.length} vybraných advokátů.</p>
 
         <div className="grid gap-8 md:grid-cols-3">
-          {/* Levý sloupec - Seznam vybraných */}
+          {/* Seznam vybraných (jen pro kontrolu) */}
           <div className="md:col-span-1">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Vybraní právníci</h3>
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-              {lawyers.map((l, i) => (
-                <div key={i} className="p-3 border-b border-slate-50 last:border-0 text-sm">
-                  <div className="font-medium text-slate-900">{l.name}</div>
-                  <div className="text-slate-500 text-xs">{l.address}</div>
-                </div>
-              ))}
+              {lawyers.length === 0 ? (
+                <p className="p-4 text-sm text-red-500">Nikdo nebyl vybrán!</p>
+              ) : (
+                lawyers.map((l, i) => (
+                  <div key={i} className="p-3 border-b border-slate-50 last:border-0 text-sm">
+                    <div className="font-medium text-slate-900">{l.name}</div>
+                    <div className="text-slate-500 text-xs">{l.city || l.address}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Pravý sloupec - Formulář */}
+          {/* Formulář */}
           <div className="md:col-span-2">
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 md:p-8">
               <h3 className="text-lg font-bold text-slate-900 mb-6">Detaily případu</h3>

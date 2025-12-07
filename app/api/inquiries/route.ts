@@ -1,35 +1,19 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic'; // Důležité: Aby se data načítala vždy čerstvá
 
 export async function GET() {
-  // Protože na Vercelu nemáme databázi, vrátíme ukázková data,
-  // aby uživatel viděl, jak Dashboard vypadá.
+  // SKUTEČNÉ ČTENÍ Z DATABÁZE SUPABASE
+  const { data, error } = await supabase
+    .from('inquiries')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Chyba při čtení:", error);
+    return NextResponse.json({ data: [] });
+  }
   
-  const demoData = [
-    {
-      id: "demo-1",
-      date: new Date().toISOString(),
-      user: { name: "Ukázkový Uživatel", email: "demo@email.cz" },
-      message: "Toto je ukázková poptávka, protože na Vercelu (Free) nelze ukládat do souborů.",
-      lawyers: [
-        {
-          name: "JUDr. Jan Novák",
-          offer: {
-            price: 2500,
-            availability: "Ihned",
-            message: "Mám zájem o zastupování."
-          }
-        },
-        {
-          name: "AK Svoboda",
-          offer: {
-            price: 1800,
-            availability: "Do týdne",
-            message: "Specializujeme se na tento obor."
-          }
-        }
-      ]
-    }
-  ];
-  
-  return NextResponse.json({ data: demoData });
+  return NextResponse.json({ data: data });
 }

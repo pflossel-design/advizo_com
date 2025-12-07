@@ -5,19 +5,27 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     
-    // Tady je to kouzlo:
-    // Vezmeme právníky, které uživatel vybral (data.lawyers)
-    // A každému z nich "přilepíme" fiktivní nabídku (protože právníci nám reálně neodpovídají)
+    console.log("📨 Backend přijal data. Počet právníků:", data.lawyers?.length);
+
+    if (!data.lawyers || data.lawyers.length === 0) {
+        return NextResponse.json({ success: false, error: "Žádní právníci nebyli vybráni" }, { status: 400 });
+    }
+    
+    // Zpracování: Vezmeme PŘESNĚ ty právníky, co přišli z frontendu
     const lawyersWithOffers = data.lawyers.map((lawyer: any) => ({
-      ...lawyer, // Zachováme Jméno, Adresu, Město...
-      offer: {   // Přidáme jakože odpověď
+      name: lawyer.name,        // Musíme zachovat jméno!
+      address: lawyer.address,  // I adresu
+      city: lawyer.city,
+      
+      // Přidáme jen fiktivní nabídku (cenu), protože reálný email zatím neposíláme
+      offer: {
         price: Math.floor(Math.random() * (3500 - 1500) + 1500),
         availability: ["Ihned", "Do týdne", "Příští měsíc"][Math.floor(Math.random() * 3)],
-        message: `Dobrý den, naše kancelář (${lawyer.name}) má zájem o váš případ.`
+        message: `Dobrý den, jako zástupce kanceláře ${lawyer.name} potvrzuji zájem o váš případ.`
       }
     }));
 
-    // Uložíme do Supabase přesně takhle
+    // Uložíme do Supabase
     const { error } = await supabase
       .from('inquiries')
       .insert([
@@ -25,7 +33,7 @@ export async function POST(request: Request) {
           name: data.name,
           email: data.email,
           message: data.message,
-          lawyers: lawyersWithOffers // Ukládáme kompletní JSON i se jmény
+          lawyers: lawyersWithOffers // Ukládáme to, co jsme zpracovali výše
         }
       ]);
 
@@ -37,6 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
+    console.error("Chyba serveru:", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
