@@ -5,17 +5,19 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     
-    // Generování nabídek (stejné jako dřív)
+    // Tady je to kouzlo:
+    // Vezmeme právníky, které uživatel vybral (data.lawyers)
+    // A každému z nich "přilepíme" fiktivní nabídku (protože právníci nám reálně neodpovídají)
     const lawyersWithOffers = data.lawyers.map((lawyer: any) => ({
-      ...lawyer,
-      offer: {
+      ...lawyer, // Zachováme Jméno, Adresu, Město...
+      offer: {   // Přidáme jakože odpověď
         price: Math.floor(Math.random() * (3500 - 1500) + 1500),
         availability: ["Ihned", "Do týdne", "Příští měsíc"][Math.floor(Math.random() * 3)],
-        message: "Dobrý den, na základě vašeho popisu mám zájem o spolupráci."
+        message: `Dobrý den, naše kancelář (${lawyer.name}) má zájem o váš případ.`
       }
     }));
 
-    // ZÁPIS DO SUPABASE
+    // Uložíme do Supabase přesně takhle
     const { error } = await supabase
       .from('inquiries')
       .insert([
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
           name: data.name,
           email: data.email,
           message: data.message,
-          lawyers: lawyersWithOffers
+          lawyers: lawyersWithOffers // Ukládáme kompletní JSON i se jmény
         }
       ]);
 
