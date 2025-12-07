@@ -14,25 +14,11 @@ export default function Home() {
     city: "",
   });
 
-  // Funkce pro spuštění robota
-  const runScraper = async () => {
-    if(!confirm("Spustit robota a stáhnout data?")) return;
-    try {
-      alert("Robot startuje... Sledujte monitor.");
-      
-      // ZMĚNA ZDE: Voláme novou adresu /api/setup
-      await fetch('/api/setup', { method: 'POST', body: JSON.stringify({}) });
-      
-      alert("Hotovo! Zkuste vyhledat 'Praha'.");
-    } catch (e) {
-      alert("Chyba.");
-    }
-  };
-
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSelectedLawyers([]); 
+    
     try {
       const response = await fetch("/api/search", {
         method: "POST",
@@ -44,7 +30,7 @@ export default function Home() {
         setResults(data.data);
       }
     } catch (error) {
-      alert("Chyba serveru");
+      alert("Chyba při komunikaci se serverem");
     } finally {
       setLoading(false);
     }
@@ -64,7 +50,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24 font-sans">
+    <main className="min-h-screen bg-slate-50 pb-24 font-sans relative">
       
       {/* Hlavička */}
       <div className="bg-white border-b border-slate-200">
@@ -77,21 +63,11 @@ export default function Home() {
 
       <div className="max-w-4xl mx-auto p-4 md:p-8">
         
-        {/* --- TLAČÍTKO PŘÍMO TADY (OBROVSKÉ A ČERVENÉ) --- */}
-        <div className="mb-8 text-center">
-          <button 
-            onClick={runScraper}
-            className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold text-xl shadow-lg hover:bg-red-700 w-full md:w-auto"
-          >
-            🤖 KLIKNI ZDE PRO NAHRÁNÍ DAT Z ČAK
-          </button>
-          <p className="text-sm text-slate-500 mt-2">Toto tlačítko je jen pro admina (tebe)</p>
-        </div>
-        {/* ----------------------------------------------- */}
-
+        {/* Vyhledávací box */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-slate-800">Vyhledat právní pomoc</h2>
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            
             <div className="md:col-span-4 relative">
               <Briefcase className="absolute left-3 top-3.5 text-slate-400 w-5 h-5" />
               <select 
@@ -106,6 +82,7 @@ export default function Home() {
                 <option>Generální praxe</option>
               </select>
             </div>
+
             <div className="md:col-span-5 relative">
               <MapPin className="absolute left-3 top-3.5 text-slate-400 w-5 h-5" />
               <input 
@@ -117,17 +94,29 @@ export default function Home() {
                 required
               />
             </div>
-            <button type="submit" disabled={loading} className="md:col-span-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="md:col-span-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+            >
               {loading ? "Hledám..." : "Vyhledat"}
             </button>
           </form>
         </div>
 
+        {/* Výsledky */}
         <div className="grid gap-4">
+          {results.length > 0 && <p className="text-slate-500">Nalezeno {results.length} právníků v naší databázi:</p>}
+          
           {results.map((lawyer, index) => {
             const isSelected = selectedLawyers.some(l => l.name === lawyer.name);
             return (
-              <div key={index} onClick={() => toggleLawyer(lawyer)} className={`relative p-6 rounded-xl border cursor-pointer transition-all ${isSelected ? "bg-blue-50 border-blue-500 shadow-md" : "bg-white border-slate-100 shadow-sm hover:border-blue-300"}`}>
+              <div 
+                key={index} 
+                onClick={() => toggleLawyer(lawyer)} 
+                className={`relative p-6 rounded-xl border cursor-pointer transition-all ${isSelected ? "bg-blue-50 border-blue-500 shadow-md" : "bg-white border-slate-100 shadow-sm hover:border-blue-300"}`}
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{lawyer.name}</h3>
@@ -143,13 +132,15 @@ export default function Home() {
           })}
         </div>
       </div>
-      
-      {/* Plovoucí panel pro výběr */}
+
+      {/* Plovoucí spodní panel */}
       {selectedLawyers.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 animate-in slide-in-from-bottom duration-300 z-50">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <p className="font-semibold text-slate-900">Vybráno: {selectedLawyers.length}</p>
-            <button onClick={goToInquiry} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg flex items-center gap-2">
+            <div>
+              <p className="font-semibold text-slate-900">Vybráno: {selectedLawyers.length}</p>
+            </div>
+            <button onClick={goToInquiry} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95">
               Vytvořit poptávku <ArrowRight className="w-5 h-5" />
             </button>
           </div>
