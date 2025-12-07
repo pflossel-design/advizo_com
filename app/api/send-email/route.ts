@@ -1,21 +1,40 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
     
-    // Na Vercelu nemůžeme zapisovat do souborů (read-only system).
-    // Pro ukázku jen vypíšeme data do logu serveru.
-    console.log("📨 POPTÁVKA (Demo):", data.email, data.message);
+    // Generování nabídek (stejné jako dřív)
+    const lawyersWithOffers = data.lawyers.map((lawyer: any) => ({
+      ...lawyer,
+      offer: {
+        price: Math.floor(Math.random() * (3500 - 1500) + 1500),
+        availability: ["Ihned", "Do týdne", "Příští měsíc"][Math.floor(Math.random() * 3)],
+        message: "Dobrý den, na základě vašeho popisu mám zájem o spolupráci."
+      }
+    }));
 
-    // Simulace chvilkového čekání
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // ZÁPIS DO SUPABASE
+    const { error } = await supabase
+      .from('inquiries')
+      .insert([
+        {
+          name: data.name,
+          email: data.email,
+          message: data.message,
+          lawyers: lawyersWithOffers
+        }
+      ]);
 
-    // Vrátíme úspěch, i když jsme nic neuložili na disk
+    if (error) {
+      console.error("Chyba Supabase:", error);
+      throw error;
+    }
+
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Chyba:", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
