@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Briefcase, CheckSquare, ArrowRight, Scale } from "lucide-react";
 
-// Dynamický import mapy
+// DŮLEŽITÉ: Dynamický import mapy (aby nepadala na serveru)
 import dynamic from "next/dynamic";
 const LawyerMap = dynamic(() => import("./components/Map"), { 
   ssr: false, 
@@ -47,6 +47,7 @@ export default function Home() {
 
   const toggleLawyer = (lawyer: any) => {
     if (selectedLawyers.some(l => l.name === lawyer.name)) {
+      // TOTO JE OPRAVENÝ KÓD: Používá setSelectedLawyers
       setSelectedLawyers(selectedLawyers.filter(l => l.name !== lawyer.name));
     } else {
       setSelectedLawyers([...selectedLawyers, lawyer]);
