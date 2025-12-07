@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Nové: pro navigaci
+import { useRouter } from "next/navigation";
 import { Search, MapPin, Briefcase, CheckSquare, ArrowRight } from "lucide-react";
 
 export default function Home() {
-  const router = useRouter(); // Nové: inicializace navigace
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [selectedLawyers, setSelectedLawyers] = useState<any[]>([]);
@@ -14,11 +14,25 @@ export default function Home() {
     city: "",
   });
 
+  // Funkce pro spuštění robota
+  const runScraper = async () => {
+    if(!confirm("Spustit robota a stáhnout data?")) return;
+    try {
+      alert("Robot startuje... Sledujte monitor.");
+      
+      // ZMĚNA ZDE: Voláme novou adresu /api/setup
+      await fetch('/api/setup', { method: 'POST', body: JSON.stringify({}) });
+      
+      alert("Hotovo! Zkuste vyhledat 'Praha'.");
+    } catch (e) {
+      alert("Chyba.");
+    }
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSelectedLawyers([]); 
-    
     try {
       const response = await fetch("/api/search", {
         method: "POST",
@@ -30,7 +44,7 @@ export default function Home() {
         setResults(data.data);
       }
     } catch (error) {
-      alert("Chyba při komunikaci se serverem");
+      alert("Chyba serveru");
     } finally {
       setLoading(false);
     }
@@ -44,16 +58,15 @@ export default function Home() {
     }
   };
 
-  // Nová funkce: Přejít na poptávku
   const goToInquiry = () => {
-    // Uložíme vybrané právníky do "dočasné paměti" prohlížeče
     localStorage.setItem("selectedLawyers", JSON.stringify(selectedLawyers));
-    // Přejdeme na stránku poptávky
     router.push("/inquiry");
   };
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 font-sans">
+      
+      {/* Hlavička */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -63,6 +76,19 @@ export default function Home() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 md:p-8">
+        
+        {/* --- TLAČÍTKO PŘÍMO TADY (OBROVSKÉ A ČERVENÉ) --- */}
+        <div className="mb-8 text-center">
+          <button 
+            onClick={runScraper}
+            className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold text-xl shadow-lg hover:bg-red-700 w-full md:w-auto"
+          >
+            🤖 KLIKNI ZDE PRO NAHRÁNÍ DAT Z ČAK
+          </button>
+          <p className="text-sm text-slate-500 mt-2">Toto tlačítko je jen pro admina (tebe)</p>
+        </div>
+        {/* ----------------------------------------------- */}
+
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-slate-800">Vyhledat právní pomoc</h2>
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-4">
@@ -117,15 +143,13 @@ export default function Home() {
           })}
         </div>
       </div>
-
+      
+      {/* Plovoucí panel pro výběr */}
       {selectedLawyers.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 z-50">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <div>
-              <p className="font-semibold text-slate-900">Vybráno: {selectedLawyers.length}</p>
-            </div>
-            {/* Tlačítko nyní volá goToInquiry */}
-            <button onClick={goToInquiry} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95">
+            <p className="font-semibold text-slate-900">Vybráno: {selectedLawyers.length}</p>
+            <button onClick={goToInquiry} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg flex items-center gap-2">
               Vytvořit poptávku <ArrowRight className="w-5 h-5" />
             </button>
           </div>
